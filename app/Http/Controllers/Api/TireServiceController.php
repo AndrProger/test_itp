@@ -45,6 +45,7 @@ class TireServiceController extends Controller
 
         try {
             $results = $this->tireServiceRepository->searchWithFilters($filters, $perPage);
+            $stats = $this->tireServiceRepository->getFilterStats();
 
             return response()->json([
                 'success' => true,
@@ -57,6 +58,7 @@ class TireServiceController extends Controller
                     'from' => $results->firstItem(),
                     'to' => $results->lastItem(),
                 ],
+                'total_count' => $stats['total_count'], // Общее количество без фильтров
                 'filters_applied' => $filters,
             ]);
         } catch (\Exception $e) {

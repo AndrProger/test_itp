@@ -20,6 +20,26 @@ class TireServiceFactory extends Factory
     protected $model = TireService::class;
 
     /**
+     * Доступные фотографии шиномонтажных сервисов
+     */
+    protected array $availableImages = [
+        'tire-services/XXL_height.jpeg',
+        'tire-services/XXL_height (1).jpeg',
+        'tire-services/XXL_height (2).jpeg',
+        'tire-services/XXL_height (3).jpeg',
+        'tire-services/XXL_height (4).jpeg',
+        'tire-services/XXL_height (5).jpeg',
+        'tire-services/XXL_height (6).jpeg',
+        'tire-services/XXL_height (7).jpeg',
+        'tire-services/XXL_height (8).jpeg',
+        'tire-services/XXL_height (9).jpeg',
+        'tire-services/orig.jpeg',
+        'tire-services/orig (1).jpeg',
+        'tire-services/XXXL.jpeg',
+        'tire-services/XXXL (1).jpeg',
+    ];
+
+    /**
      * Define the model's default state.
      *
      * @return array<string, mixed>
@@ -42,7 +62,7 @@ class TireServiceFactory extends Factory
 
         return [
             'name' => "$serviceType \"$district-$number\"",
-            'image' => $this->faker->boolean(70) ? 'tire-services/' . $this->faker->uuid() . '.jpg' : null,
+            'image' => $this->faker->boolean(70) ? $this->faker->randomElement($this->availableImages) : null,
             'rooms_count' => $this->faker->numberBetween(1, 8),
             'floor' => $this->faker->numberBetween(1, 5),
             'area' => $this->faker->randomFloat(2, 15.0, 300.0),
@@ -56,7 +76,7 @@ class TireServiceFactory extends Factory
     public function withImage(): static
     {
         return $this->state(fn (array $attributes) => [
-            'image' => 'tire-services/' . $this->faker->uuid() . '.jpg',
+            'image' => $this->faker->randomElement($this->availableImages),
         ]);
     }
 

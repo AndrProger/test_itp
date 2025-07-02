@@ -26,7 +26,7 @@
     <!-- Content Section -->
     <div class="p-4">
       <!-- Title -->
-      <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
+      <h3 class="text-lg font-semibold text-gray-900 mb-2 line-clamp-2 title-fixed-height">
         {{ service.name }}
       </h3>
 
@@ -51,7 +51,7 @@
       </div>
 
       <!-- Description -->
-      <p class="text-sm text-gray-600 mb-4 line-clamp-3">
+      <p class="text-sm text-gray-600 mb-4 line-clamp-3 description-fixed-height">
         {{ service.description || 'Описание не указано' }}
       </p>
 
@@ -118,5 +118,15 @@ const openDetails = () => {
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+.title-fixed-height {
+  height: 3.5rem; /* Фиксированная высота для 2 строк (56px) */
+  line-height: 1.75rem; /* 28px line-height для text-lg */
+}
+
+.description-fixed-height {
+  height: 3.75rem; /* Фиксированная высота для 3 строк text-sm (60px) */
+  line-height: 1.25rem; /* 20px line-height для text-sm */
 }
 </style> 

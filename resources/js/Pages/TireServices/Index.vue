@@ -1,5 +1,5 @@
 <template>
-  <AppLayout :total-count="data.pagination.total">
+  <AppLayout :total-count="totalCount">
     <div class="space-y-6">
       <!-- Filters Section -->
       <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -176,6 +176,7 @@ const props = defineProps({
 // Reactive state
 const data = ref(props.initialData)
 const loading = ref(false)
+const totalCount = ref(props.initialData?.total_count || 0)
 
 const filters = reactive({
   name: props.initialFilters.name || '',
@@ -231,6 +232,11 @@ const performSearch = async (page = 1) => {
     
     if (result.success) {
       data.value = result
+      
+      // Обновляем общее количество, если оно есть в ответе
+      if (result.total_count !== undefined) {
+        totalCount.value = result.total_count
+      }
       
       // Update URL with current filters
       updateUrl()

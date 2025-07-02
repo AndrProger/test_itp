@@ -43,6 +43,13 @@ class TireService extends Model
     ];
 
     /**
+     * Атрибуты, которые должны добавляться к JSON
+     */
+    protected $appends = [
+        'image_url',
+    ];
+
+    /**
      * Scope для поиска по названию с правильной сортировкой
      */
     public function scopeSearchByName(Builder $query, ?string $name): Builder

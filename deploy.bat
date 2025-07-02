@@ -26,7 +26,7 @@ call docker-compose up -d mysql phpmyadmin
 
 echo.
 echo Step 5: Waiting for MySQL...
-timeout /t 30 /nobreak
+timeout /t 10 /nobreak
 
 echo.
 echo Step 6: Running migrations...

@@ -54,6 +54,7 @@ class TireServiceController extends Controller
                     'from' => $initialData->firstItem(),
                     'to' => $initialData->lastItem(),
                 ],
+                'total_count' => $filterStats['total_count'], // Общее количество без фильтров
             ],
             'filterStats' => $filterStats,
             'initialFilters' => $initialFilters,
