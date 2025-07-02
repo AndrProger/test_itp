@@ -28,11 +28,11 @@
               Наличие фотографии
             </label>
             <div class="flex items-center space-x-4">
-              <label class="flex items-center">
+              <label class="flex items-center group cursor-pointer">
                 <input
                   v-model="filters.hasImage"
                   type="checkbox"
-                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50 transition-all duration-300 hover:border-blue-400 cursor-pointer"
                   @change="performSearch"
                 />
                 <span class="ml-2 text-sm text-gray-600">Только с фото</span>
@@ -96,16 +96,69 @@
           </div>
         </div>
 
-        <!-- Clear Filters -->
+        <!-- Sorting -->
+        <div class="mt-6">
+          <label class="block text-sm font-medium text-gray-700 mb-3">
+            Сортировка
+          </label>
+          
+          <!-- Sort Field Selection -->
+          <div class="mb-3">
+            <select
+              v-model="filters.sortBy"
+              class="w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-gray-400 hover:shadow-md cursor-pointer"
+              @change="performSearch"
+            >
+              <option value="id">По умолчанию (ID)</option>
+              <option value="name">По названию</option>
+              <option value="area">По площади</option>
+              <option value="rooms_count">По количеству комнат</option>
+              <option value="created_at">По дате добавления</option>
+            </select>
+          </div>
+          
+          <!-- Sort Direction -->
+          <div class="flex space-x-2">
+            <button
+              @click="setSortDirection('asc')"
+              :class="[
+                'flex-1 px-2 py-1 text-xs rounded border transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500',
+                filters.sortDirection === 'asc'
+                  ? 'bg-blue-100 border-blue-500 text-blue-700 shadow-md hover:bg-blue-200 hover:shadow-lg'
+                  : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200 hover:border-gray-400 hover:shadow-md'
+              ]"
+            >
+              ↑ По возрастанию
+            </button>
+            <button
+              @click="setSortDirection('desc')"
+              :class="[
+                'flex-1 px-2 py-1 text-xs rounded border transition-all duration-300 ease-in-out transform hover:scale-105 active:scale-95 cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-500',
+                filters.sortDirection === 'desc'
+                  ? 'bg-blue-100 border-blue-500 text-blue-700 shadow-md hover:bg-blue-200 hover:shadow-lg'
+                  : 'bg-gray-100 border-gray-300 text-gray-600 hover:bg-gray-200 hover:border-gray-400 hover:shadow-md'
+              ]"
+            >
+              ↓ По убыванию
+            </button>
+          </div>
+        </div>
+
+        <!-- Clear Filters and Stats -->
         <div class="mt-4 flex justify-between items-center">
           <button
             @click="clearFilters"
-            class="text-sm text-gray-500 hover:text-gray-700 underline"
+            class="text-sm text-gray-500 hover:text-gray-700 underline self-start transition-all duration-300 ease-in-out transform hover:scale-105 cursor-pointer focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 rounded px-1"
           >
             Очистить все фильтры
           </button>
-          <div class="text-sm text-gray-600">
-            {{ loading ? 'Поиск...' : `Найдено: ${data.pagination.total} результатов` }}
+          <div class="text-right">
+            <div class="text-sm text-gray-600">
+              {{ loading ? 'Поиск...' : `Найдено: ${data.pagination.total} результатов` }}
+            </div>
+            <div v-if="filters.sortBy !== 'id' || filters.name" class="text-xs text-blue-600 mt-1">
+              {{ getSortingLabel() }}
+            </div>
           </div>
         </div>
       </div>
@@ -128,13 +181,13 @@
             />
           </div>
 
-          <!-- Pagination -->
-          <Pagination
-            v-if="data.pagination.last_page > 1"
-            :pagination="data.pagination"
-            @page-changed="handlePageChange"
-            class="mt-8"
-          />
+                  <!-- Pagination -->
+        <Pagination
+          v-if="data.pagination.last_page > 1"
+          :pagination="data.pagination"
+          @page-change="handlePageChange"
+          class="mt-8"
+        />
         </div>
 
         <!-- Empty State -->
@@ -183,7 +236,9 @@ const filters = reactive({
   hasImage: props.initialFilters.has_image || false,
   roomsCount: props.initialFilters.rooms_count || [],
   areaMin: props.initialFilters.area_min || null,
-  areaMax: props.initialFilters.area_max || null
+  areaMax: props.initialFilters.area_max || null,
+  sortBy: props.initialFilters.sort_by || 'id',
+  sortDirection: props.initialFilters.sort_direction || 'desc'
 })
 
 // Debounced search function
@@ -203,8 +258,10 @@ const performSearch = async (page = 1) => {
     if (filters.hasImage) params.append('has_image', '1')
     if (filters.areaMin) params.append('area_min', filters.areaMin)
     if (filters.areaMax) params.append('area_max', filters.areaMax)
+    if (filters.sortBy) params.append('sort_by', filters.sortBy)
+    if (filters.sortDirection) params.append('sort_direction', filters.sortDirection)
     params.append('page', page)
-    params.append('per_page', 15)
+    params.append('per_page', 20)
     
     // Add rooms_count array properly
     if (filters.roomsCount && filters.roomsCount.length > 0) {
@@ -261,6 +318,8 @@ const updateUrl = () => {
   }
   if (filters.areaMin) params.set('area_min', filters.areaMin)
   if (filters.areaMax) params.set('area_max', filters.areaMax)
+  if (filters.sortBy && filters.sortBy !== 'id') params.set('sort_by', filters.sortBy)
+  if (filters.sortDirection && filters.sortDirection !== 'desc') params.set('sort_direction', filters.sortDirection)
   
   const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
   window.history.replaceState({}, '', newUrl)
@@ -273,6 +332,8 @@ const clearFilters = () => {
   filters.roomsCount = []
   filters.areaMin = null
   filters.areaMax = null
+  filters.sortBy = 'id'
+  filters.sortDirection = 'desc'
   
   performSearch()
 }
@@ -280,6 +341,30 @@ const clearFilters = () => {
 // Handle page change
 const handlePageChange = (page) => {
   performSearch(page)
+}
+
+// Set sort direction
+const setSortDirection = (direction) => {
+  filters.sortDirection = direction
+  performSearch()
+}
+
+// Get sorting label for display
+const getSortingLabel = () => {
+  if (filters.name) {
+    return 'Сортировка по релевантности поиска'
+  }
+  
+  const sortLabels = {
+    'id': 'По умолчанию',
+    'name': 'По названию',
+    'area': 'По площади',
+    'rooms_count': 'По количеству комнат',
+    'created_at': 'По дате добавления'
+  }
+  
+  const directionLabel = filters.sortDirection === 'asc' ? 'по возрастанию' : 'по убыванию'
+  return `${sortLabels[filters.sortBy]} ${directionLabel}`
 }
 
 // Initialize component
@@ -292,6 +377,8 @@ onMounted(() => {
   if (urlParams.get('has_image')) filters.hasImage = urlParams.get('has_image') === '1'
   if (urlParams.get('area_min')) filters.areaMin = parseInt(urlParams.get('area_min'))
   if (urlParams.get('area_max')) filters.areaMax = parseInt(urlParams.get('area_max'))
+  if (urlParams.get('sort_by')) filters.sortBy = urlParams.get('sort_by')
+  if (urlParams.get('sort_direction')) filters.sortDirection = urlParams.get('sort_direction')
   
   // Parse rooms_count array
   const roomsCountParams = urlParams.getAll('rooms_count[]')

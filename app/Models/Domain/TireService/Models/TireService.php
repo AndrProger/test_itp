@@ -118,7 +118,14 @@ class TireService extends Model
      */
     public function getImageUrlAttribute(): ?string
     {
-        return $this->image ? asset('storage/' . $this->image) : null;
+        if (!$this->image) {
+            return null;
+        }
+        
+        // Кодируем имя файла для корректной работы с пробелами
+        $encodedPath = 'tire-services/' . rawurlencode($this->image);
+        
+        return asset('storage/' . $encodedPath);
     }
 
     /**

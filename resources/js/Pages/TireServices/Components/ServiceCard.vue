@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden">
+  <div class="bg-white rounded-lg border border-gray-200 shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden card-animation">
     <!-- Image Section -->
     <div class="relative h-48 bg-gray-100">
       <img
@@ -16,9 +16,12 @@
       </div>
       
       <!-- Has Image Badge -->
-      <div v-if="service.image" class="absolute top-2 right-2">
-        <span class="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-          📷 Есть фото
+      <div v-if="service.image" class="absolute top-2 right-2 bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
+        <span class="">
+          📷
+        </span>
+        <span class>
+          Есть фото
         </span>
       </div>
     </div>
@@ -48,6 +51,11 @@
           <span class="text-gray-600">Площадь:</span>
           <span class="font-medium text-gray-900">{{ service.area }} м²</span>
         </div>
+        
+        <div class="flex items-center justify-between text-sm">
+          <span class="text-gray-600">Добавлено:</span>
+          <span class="font-medium text-gray-900">{{ formatDate(service.created_at) }}</span>
+        </div>
       </div>
 
       <!-- Description -->
@@ -56,10 +64,10 @@
       </p>
 
       <!-- Action Button -->
-      <div class="flex justify-between items-center">
+      <div class="flex justify-between items-center card-button-animation">
         <button
           @click="openDetails"
-          class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors"
+          class="bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors cursor-pointer"
         >
           Подробнее
         </button>
@@ -103,6 +111,36 @@ const handleImageError = (event) => {
 const openDetails = () => {
   router.visit(`/tire-service/${props.service.id}`)
 }
+
+// Format date for display
+const formatDate = (dateString) => {
+  if (!dateString) return 'Не указано'
+  
+  const date = new Date(dateString)
+  const now = new Date()
+  const diffTime = Math.abs(now - date)
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  if (diffDays === 0) {
+    return 'Сегодня'
+  } else if (diffDays === 1) {
+    return 'Вчера'
+  } else if (diffDays < 7) {
+    return `${diffDays} дн. назад`
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7)
+    return `${weeks} нед. назад`
+  } else if (diffDays < 365) {
+    const months = Math.floor(diffDays / 30)
+    return `${months} мес. назад`
+  } else {
+    return date.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric'
+    })
+  }
+}
 </script>
 
 <style scoped>
@@ -130,4 +168,11 @@ const openDetails = () => {
     height: 3.75rem; /* Фиксированная высота для 3 строк text-sm (60px) */
     line-height: 1.25rem; /* 20px line-height для text-sm */
   }
+  .card-animation {
+  transition: transform 0.3s ease-in-out;
+}
+
+.card-animation:hover {
+  transform: translateY(-5px);
+}
 </style> 

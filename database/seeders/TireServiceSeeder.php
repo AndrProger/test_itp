@@ -34,27 +34,15 @@ class TireServiceSeeder extends Seeder
 
             $this->command->info("Генерация батча " . ($i + 1) . " из $batches ($currentBatchSize записей)...");
 
-            // Генерируем разнообразные данные
-            $records = [];
-
             // 70% записей с изображениями
             $withImageCount = round($currentBatchSize * 0.7);
-            $records = array_merge($records,
-                TireService::factory($withImageCount)->withImage()->make()->toArray()
-            );
+            TireService::factory($withImageCount)->withImage()->create();
 
             // 30% записей без изображений
             $withoutImageCount = $currentBatchSize - $withImageCount;
-            $records = array_merge($records,
-                TireService::factory($withoutImageCount)->withoutImage()->make()->toArray()
-            );
-
-            // Вставляем данные батчами
-            TireService::insert($records);
+            TireService::factory($withoutImageCount)->withoutImage()->create();
         }
-
 
         $this->command->info("✅ Успешно сгенерировано $totalRecords записей шиномонтажных сервисов!");
     }
-
 }
