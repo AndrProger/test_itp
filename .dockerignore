@@ -38,6 +38,7 @@ Thumbs.db
 # Git
 .git
 .gitignore
+.gitattributes
 
 # Testing
 .phpunit.result.cache
@@ -49,4 +50,61 @@ docker-compose.override.yml
 
 # Temporary files
 *.tmp
-*.temp 
+*.temp
+
+# Node.js
+node_modules
+npm-debug.log
+
+# Laravel
+/storage/app/*
+!/storage/app/.gitignore
+!/storage/app/public
+/storage/framework/cache/*
+!/storage/framework/cache/.gitignore
+/storage/framework/sessions/*
+!/storage/framework/sessions/.gitignore
+/storage/framework/views/*
+!/storage/framework/views/.gitignore
+/storage/logs/*
+!/storage/logs/.gitignore
+/bootstrap/cache/*
+!/bootstrap/cache/.gitignore
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Tests
+/tests
+phpunit.xml
+
+# Documentation
+README.md
+CHANGELOG.md
+*.md
+
+# Development tools
+.editorconfig
+.styleci.yml
+_ide_helper.php
+.phpstorm.meta.php
+
+# Deployment scripts
+deploy*.bat
+deploy*.sh
+
+# Docker development files
+docker-compose.yml
+docker-compose-simple.yml 

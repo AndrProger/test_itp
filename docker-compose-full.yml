@@ -1,0 +1,119 @@
+version: '3.8'
+
+services:
+  # Laravel Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${APP_CONTAINER_NAME:-tire_services_app}
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-80}:80"
+    environment:
+      - APP_NAME=${APP_NAME:-shinka.kz}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY:-}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-tire_services}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
+      - CACHE_DRIVER=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
+    volumes:
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tire_services_network
+    command: ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"]
+
+  # Laravel Initialization (runs once)
+  init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ${INIT_CONTAINER_NAME:-tire_services_init}
+    environment:
+      - APP_NAME=${APP_NAME:-shinka.kz}
+      - APP_ENV=${APP_ENV:-production}
+      - APP_KEY=${APP_KEY:-}
+      - APP_DEBUG=${APP_DEBUG:-false}
+      - APP_URL=${APP_URL:-http://localhost}
+      - DB_CONNECTION=mysql
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_DATABASE=${DB_DATABASE:-tire_services}
+      - DB_USERNAME=${DB_USERNAME:-root}
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD:-root_password}
+      - CACHE_DRIVER=database
+      - SESSION_DRIVER=database
+      - QUEUE_CONNECTION=database
+    volumes:
+      - app_storage:/var/www/storage
+      - app_cache:/var/www/bootstrap/cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - tire_services_network
+    command: ["/bin/sh", "/var/www/docker/init.sh"]
+    restart: "no"
+
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: ${MYSQL_CONTAINER_NAME:-tire_services_mysql}
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-tire_services}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${DB_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - tire_services_network
+    command: --default-authentication-plugin=mysql_native_password --ssl=0
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}"]
+      timeout: 20s
+      retries: 10
+      interval: 10s
+
+  # phpMyAdmin (для удобства управления БД)
+  phpmyadmin:
+    image: phpmyadmin:latest
+    container_name: ${PHPMYADMIN_CONTAINER_NAME:-tire_services_phpmyadmin}
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_USER: root
+      PMA_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+    ports:
+      - "${PHPMYADMIN_PORT:-8080}:80"
+    depends_on:
+      - mysql
+    networks:
+      - tire_services_network
+
+volumes:
+  mysql_data:
+    driver: local
+  app_storage:
+    driver: local
+  app_cache:
+    driver: local
+
+networks:
+  tire_services_network:
+    driver: bridge 
