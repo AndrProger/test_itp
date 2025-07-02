@@ -37,22 +37,9 @@ services:
       - tire_services_network
 
   # Redis (для кеширования, опционально)
-  redis:
-    image: redis:7-alpine
-    container_name: ${REDIS_CONTAINER_NAME:-tire_services_redis}
-    restart: unless-stopped
-    ports:
-      - "${REDIS_PORT:-6379}:6379"
-    volumes:
-      - redis_data:/data
-    networks:
-      - tire_services_network
-    command: redis-server --appendonly yes
 
 volumes:
   mysql_data:
-    driver: local
-  redis_data:
     driver: local
 
 networks:
