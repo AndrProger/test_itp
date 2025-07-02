@@ -14,28 +14,202 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Custom styles */
+/* Custom responsive base styles */
 @layer base {
   html {
     font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
   }
+  
+  /* Smooth scrolling for all screen sizes */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Better text rendering for high-DPI displays */
+  body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Responsive font sizes */
+  @media (max-width: 640px) {
+    html {
+      font-size: 14px;
+    }
+  }
+  
+  @media (min-width: 1920px) {
+    html {
+      font-size: 18px;
+    }
+  }
+  
+  @media (min-width: 3840px) {
+    html {
+      font-size: 20px;
+    }
+  }
 }
 
 @layer components {
+  /* Responsive button styles */
   .btn-primary {
-    @apply bg-blue-600 text-white px-4 py-2 rounded-md font-medium hover:bg-blue-700 transition-colors;
+    @apply bg-blue-600 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm font-medium hover:bg-blue-700 transition-colors;
   }
   
   .btn-secondary {
-    @apply bg-gray-100 text-gray-700 px-4 py-2 rounded-md font-medium hover:bg-gray-200 transition-colors;
+    @apply bg-gray-100 text-gray-700 px-3 py-2 sm:px-4 sm:py-2 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors;
   }
   
+  /* Responsive input field styles */
   .input-field {
-    @apply w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+    @apply w-full px-2 py-2 sm:px-3 sm:py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500;
+  }
+  
+  /* Responsive card styles */
+  .card {
+    @apply bg-white rounded-lg border border-gray-200 shadow-sm p-3 sm:p-4 lg:p-6;
+  }
+  
+  .card-header {
+    @apply text-base sm:text-lg lg:text-xl font-semibold text-gray-900 mb-3 sm:mb-4 lg:mb-6;
+  }
+  
+  /* Responsive grid containers */
+  .grid-responsive-cards {
+    @apply grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6;
+  }
+  
+  .grid-responsive-filters {
+    @apply space-y-4 sm:space-y-0 sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-4 sm:gap-6;
+  }
+  
+  /* Container improvements for large screens */
+  .container-responsive {
+    @apply max-w-7xl 2xl:max-w-screen-2xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8;
+  }
+  
+  /* Typography improvements */
+  .text-responsive-xl {
+    @apply text-lg sm:text-xl lg:text-2xl xl:text-3xl;
+  }
+  
+  .text-responsive-lg {
+    @apply text-base sm:text-lg lg:text-xl;
+  }
+  
+  .text-responsive-base {
+    @apply text-sm sm:text-base lg:text-lg;
+  }
+  
+  .text-responsive-sm {
+    @apply text-xs sm:text-sm lg:text-base;
+  }
+  
+  /* Loading states */
+  .loading-spinner {
+    @apply inline-block animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 border-b-2 border-blue-600;
+  }
+  
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+  }
+  
+  .badge-success {
+    @apply bg-green-100 text-green-800;
+  }
+  
+  .badge-info {
+    @apply bg-blue-100 text-blue-800;
+  }
+  
+  /* Form improvements for mobile */
+  .form-group {
+    @apply space-y-1 sm:space-y-2;
+  }
+  
+  .form-label {
+    @apply block text-xs sm:text-sm font-medium text-gray-700;
+  }
+  
+  .form-help {
+    @apply text-xs text-gray-500 mt-1;
+  }
+  
+  /* Responsive spacing utilities */
+  .section-padding {
+    @apply py-4 sm:py-6 lg:py-8 xl:py-12;
+  }
+  
+  .element-spacing {
+    @apply space-y-3 sm:space-y-4 lg:space-y-6;
   }
 }
 
-/* Loading spinner */
+@layer utilities {
+  /* Touch-friendly target sizes for mobile */
+  .touch-target {
+    @apply min-w-11 min-h-11 sm:min-w-12 sm:min-h-12 lg:min-w-10 lg:min-h-10;
+  }
+  
+  /* Hide elements responsively */
+  .hide-mobile {
+    @apply hidden sm:block;
+  }
+  
+  .hide-tablet {
+    @apply sm:hidden lg:block;
+  }
+  
+  .mobile-only {
+    @apply sm:hidden;
+  }
+  
+  /* Responsive text truncation */
+  .truncate-mobile {
+    @apply truncate sm:text-clip sm:overflow-visible sm:whitespace-normal;
+  }
+  
+  /* Better focus states for keyboard navigation */
+  .focus-enhanced {
+    @apply focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
+  }
+  
+  /* High contrast mode support */
+  @media (prefers-contrast: high) {
+    .high-contrast {
+      @apply border-2 border-gray-900;
+    }
+  }
+  
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    .respect-motion {
+      @apply transition-none;
+    }
+  }
+  
+  /* Dark mode support preparation */
+  @media (prefers-color-scheme: dark) {
+    .dark-mode-ready {
+      @apply bg-gray-900 text-white;
+    }
+  }
+  
+  /* Print styles */
+  @media print {
+    .print-hidden {
+      @apply hidden;
+    }
+    
+    .print-visible {
+      @apply block;
+    }
+  }
+}
+
+/* Loading spinner animation */
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -44,4 +218,45 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+/* Custom scrollbar for webkit browsers */
+@media (min-width: 768px) {
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f5f9;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High DPI display optimizations */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .high-dpi-image {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
 }

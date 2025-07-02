@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use App\Models\Domain\TireService\Models\TireService;
 
 class TireServiceController extends Controller
 {
@@ -22,52 +23,107 @@ class TireServiceController extends Controller
     ) {}
 
     /**
-     * Поиск и фильтрация шиномонтажных сервисов
+     * Поиск и фильтрация сервисов
      */
     public function index(Request $request): JsonResponse
     {
-        // Simplified validation for debugging
-        $name = $request->get('name');
-        $hasImage = $request->get('has_image');
-        $roomsCount = $request->get('rooms_count', []);
-        $areaMin = $request->get('area_min');
-        $areaMax = $request->get('area_max');
-        $page = $request->get('page', 1);
-        $perPage = min(max((int)$request->get('per_page', 15), 5), 100);
+        // Получаем общее количество записей для заголовка
+        $totalCount = TireService::count();
+        
+        // Build query
+        $query = TireService::query();
 
-        $filters = array_filter([
-            'name' => $name,
-            'has_image' => $hasImage ? ($hasImage === '1' || $hasImage === 'true') : null,
-            'rooms_count' => is_array($roomsCount) ? $roomsCount : [],
-            'area_min' => $areaMin ? (float)$areaMin : null,
-            'area_max' => $areaMax ? (float)$areaMax : null,
-        ], fn($value) => $value !== null && $value !== []);
-
-        try {
-            $results = $this->tireServiceRepository->searchWithFilters($filters, $perPage);
-            $stats = $this->tireServiceRepository->getFilterStats();
-
-            return response()->json([
-                'success' => true,
-                'data' => $results->items(),
-                'pagination' => [
-                    'current_page' => $results->currentPage(),
-                    'last_page' => $results->lastPage(),
-                    'per_page' => $results->perPage(),
-                    'total' => $results->total(),
-                    'from' => $results->firstItem(),
-                    'to' => $results->lastItem(),
-                ],
-                'total_count' => $stats['total_count'], // Общее количество без фильтров
-                'filters_applied' => $filters,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'error' => $e->getMessage(),
-                'trace' => config('app.debug') ? $e->getTraceAsString() : null,
-            ], 500);
+        // Apply filters
+        $hasNameFilter = $request->filled('name');
+        if ($hasNameFilter) {
+            $name = $request->get('name');
+            $query->where('name', 'like', '%' . $name . '%');
         }
+
+        if ($request->boolean('has_image')) {
+            $query->whereNotNull('image');
+        }
+
+        if ($request->filled('rooms_count')) {
+            $roomsCounts = $request->get('rooms_count');
+            if (is_array($roomsCounts)) {
+                $query->whereIn('rooms_count', $roomsCounts);
+            }
+        }
+
+        if ($request->filled('area_min')) {
+            $query->where('area', '>=', $request->get('area_min'));
+        }
+
+        if ($request->filled('area_max')) {
+            $query->where('area', '<=', $request->get('area_max'));
+        }
+
+        // Apply sorting
+        $sortBy = $request->get('sort_by', 'id');
+        $sortDirection = $request->get('sort_direction', 'desc');
+
+        if ($hasNameFilter) {
+            // При поиске по названию - сортировка по релевантности
+            $name = $request->get('name');
+            $query->orderByRaw("
+                CASE 
+                    WHEN LOWER(name) = LOWER(?) THEN 1
+                    WHEN LOWER(name) LIKE LOWER(?) THEN 2
+                    WHEN LOWER(name) LIKE LOWER(?) THEN 3
+                    ELSE 4
+                END
+            ", [$name, $name . '%', '%' . $name . '%']);
+            
+            // Дополнительная сортировка внутри каждой группы релевантности
+            if ($sortBy === 'name') {
+                $query->orderBy('name', $sortDirection);
+            } elseif ($sortBy === 'area') {
+                $query->orderBy('area', $sortDirection);
+            } elseif ($sortBy === 'rooms_count') {
+                $query->orderBy('rooms_count', $sortDirection);
+            } else {
+                $query->orderBy('id', $sortDirection);
+            }
+        } else {
+            // Обычная сортировка без поиска по названию
+            if ($sortBy === 'name') {
+                $query->orderBy('name', $sortDirection);
+            } elseif ($sortBy === 'area') {
+                $query->orderBy('area', $sortDirection);
+            } elseif ($sortBy === 'rooms_count') {
+                $query->orderBy('rooms_count', $sortDirection);
+            } elseif ($sortBy === 'created_at') {
+                $query->orderBy('created_at', $sortDirection);
+            } else {
+                $query->orderBy('id', $sortDirection);
+            }
+        }
+
+        // Get per_page from request, default to 20
+        $perPage = $request->get('per_page', 20);
+
+        // Get results with pagination
+        $tireServices = $query->paginate($perPage);
+
+        return response()->json([
+            'success' => true,
+            'data' => $tireServices->items(),
+            'pagination' => [
+                'total' => $tireServices->total(),
+                'per_page' => $tireServices->perPage(),
+                'current_page' => $tireServices->currentPage(),
+                'last_page' => $tireServices->lastPage(),
+                'from' => $tireServices->firstItem(),
+                'to' => $tireServices->lastItem(),
+            ],
+            'total_count' => $totalCount,
+            'sorting' => [
+                'sort_by' => $sortBy,
+                'sort_direction' => $sortDirection,
+                'has_name_filter' => $hasNameFilter
+            ]
+        ]);
     }
 
     /**
@@ -88,18 +144,18 @@ class TireServiceController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $tireService = $this->tireServiceRepository->findById($id);
+        $tireService = TireService::find($id);
 
         if (!$tireService) {
             return response()->json([
                 'success' => false,
-                'message' => 'Шиномонтажный сервис не найден',
+                'message' => 'Шиномонтажный сервис не найден'
             ], 404);
         }
 
         return response()->json([
             'success' => true,
-            'data' => $tireService,
+            'data' => $tireService
         ]);
     }
 

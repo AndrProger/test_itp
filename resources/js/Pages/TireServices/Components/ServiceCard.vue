@@ -125,8 +125,9 @@ const openDetails = () => {
   line-height: 1.75rem; /* 28px line-height для text-lg */
 }
 
-.description-fixed-height {
-  height: 3.75rem; /* Фиксированная высота для 3 строк text-sm (60px) */
-  line-height: 1.25rem; /* 20px line-height для text-sm */
-}
+
+  .description-fixed-height {
+    height: 3.75rem; /* Фиксированная высота для 3 строк text-sm (60px) */
+    line-height: 1.25rem; /* 20px line-height для text-sm */
+  }
 </style> 
