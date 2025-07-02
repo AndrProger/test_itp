@@ -1,0 +1,52 @@
+# Laravel специфичные файлы
+.env
+.env.backup
+.env.production
+.env.docker
+
+# Зависимости
+/node_modules
+/vendor
+
+# Логи
+/storage/logs
+*.log
+
+# Cache
+/bootstrap/cache
+/storage/framework/cache
+/storage/framework/sessions
+/storage/framework/testing
+/storage/framework/views
+
+# Compiled assets
+/public/hot
+/public/storage
+/public/build
+
+# IDE файлы
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS файлы
+.DS_Store
+Thumbs.db
+
+# Git
+.git
+.gitignore
+
+# Testing
+.phpunit.result.cache
+/coverage
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+
+# Temporary files
+*.tmp
+*.temp 
