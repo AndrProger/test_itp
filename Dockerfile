@@ -87,5 +87,5 @@ USER root
 # Открываем веб-сервер порт  
 EXPOSE 80
 
-# Запускаем встроенный Laravel сервер
-CMD ["php", "artisan", "serve", "--host=0.0.0.0", "--port=80"] 
+# Запускаем встроенный Laravel сервер с созданием symbolic link
+CMD ["/bin/sh", "-c", "php artisan storage:link && php artisan serve --host=0.0.0.0 --port=80"] 
