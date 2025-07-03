@@ -65,7 +65,7 @@
                 />
               </div>
               <div class="text-xs text-gray-500">
-                Диапазон: {{ filterStats.area_range.min }} - {{ filterStats.area_range.max }} м²
+                Диапазон: {{ filterStats.area_range?.min ?? 0 }} - {{ filterStats.area_range?.max ?? 0 }} м²
               </div>
             </div>
           </div>
@@ -212,66 +212,46 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
-import { router } from '@inertiajs/vue3'
-import { debounce } from 'lodash-es'
+import { ref, computed, onMounted } from 'vue'
+import { useStore } from 'vuex'
 import AppLayout from '../Layout/AppLayout.vue'
 import ServiceCard from './Components/ServiceCard.vue'
 import Pagination from './Components/Pagination.vue'
 
-// Props от Laravel
-const props = defineProps({
-  initialData: Object,
-  filterStats: Object,
-  initialFilters: Object
+const store = useStore()
+
+const filters = computed({
+  get: () => store.state.filters,
+  set: (val) => store.commit('setFilters', val)
+})
+const page = computed({
+  get: () => store.state.page,
+  set: (val) => store.commit('setPage', val)
 })
 
-// Reactive state
-const data = ref(props.initialData)
+const data = ref({ data: [], pagination: {}, success: true })
+const filterStats = ref({ area_range: { min: 0, max: 1000 }, rooms_counts: [] })
+const totalCount = ref(0)
 const loading = ref(false)
-const totalCount = ref(props.initialData?.total_count || 0)
 
-const filters = reactive({
-  name: props.initialFilters.name || '',
-  hasImage: props.initialFilters.has_image || false,
-  roomsCount: props.initialFilters.rooms_count || [],
-  areaMin: props.initialFilters.area_min || null,
-  areaMax: props.initialFilters.area_max || null,
-  sortBy: props.initialFilters.sort_by || 'id',
-  sortDirection: props.initialFilters.sort_direction || 'desc'
-})
-
-// Debounced search function
-const debouncedSearch = debounce(() => {
-  performSearch()
-}, 500)
-
-// Perform search
-const performSearch = async (page = 1) => {
+// --- Поиск ---
+const performSearch = async (customPage = null) => {
   loading.value = true
-  
   try {
     const params = new URLSearchParams()
-    
-    // Add basic params
-    if (filters.name) params.append('name', filters.name)
-    if (filters.hasImage) params.append('has_image', '1')
-    if (filters.areaMin) params.append('area_min', filters.areaMin)
-    if (filters.areaMax) params.append('area_max', filters.areaMax)
-    if (filters.sortBy) params.append('sort_by', filters.sortBy)
-    if (filters.sortDirection) params.append('sort_direction', filters.sortDirection)
-    params.append('page', page)
+    if (filters.value.name) params.append('name', filters.value.name)
+    if (filters.value.hasImage) params.append('has_image', '1')
+    if (filters.value.areaMin) params.append('area_min', filters.value.areaMin)
+    if (filters.value.areaMax) params.append('area_max', filters.value.areaMax)
+    if (filters.value.sortBy) params.append('sort_by', filters.value.sortBy)
+    if (filters.value.sortDirection) params.append('sort_direction', filters.value.sortDirection)
+    params.append('page', customPage ?? page.value)
     params.append('per_page', 20)
-    
-    // Add rooms_count array properly
-    if (filters.roomsCount && filters.roomsCount.length > 0) {
-      filters.roomsCount.forEach(count => {
+    if (filters.value.roomsCount && filters.value.roomsCount.length > 0) {
+      filters.value.roomsCount.forEach(count => {
         params.append('rooms_count[]', count)
       })
     }
-    
-    console.log('API Request URL:', '/api/tire-services?' + params.toString())
-    
     const response = await fetch('/api/tire-services?' + params.toString(), {
       headers: {
         'Accept': 'application/json',
@@ -279,23 +259,14 @@ const performSearch = async (page = 1) => {
         'X-Requested-With': 'XMLHttpRequest'
       }
     })
-    
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`)
-    }
-    
+    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`)
     const result = await response.json()
-    console.log('API Response:', result)
-    
     if (result.success) {
       data.value = result
-      
-      // Обновляем общее количество, если оно есть в ответе
       if (result.total_count !== undefined) {
         totalCount.value = result.total_count
       }
-      
-      // Update URL with current filters
+      store.commit('setPage', customPage ?? page.value)
       updateUrl()
     } else {
       console.error('API returned error:', result)
@@ -307,51 +278,66 @@ const performSearch = async (page = 1) => {
   }
 }
 
-// Update URL with current filters
+// --- Дебаунс ---
+let debounceTimeout = null
+const debouncedSearch = () => {
+  clearTimeout(debounceTimeout)
+  debounceTimeout = setTimeout(() => performSearch(1), 500)
+}
+
+// --- Очистка фильтров ---
+const clearFilters = () => {
+  store.commit('clearFilters')
+  performSearch(1)
+}
+
+// --- Сортировка ---
+const setSortDirection = (direction) => {
+  filters.value.sortDirection = direction
+  store.commit('setFilters', filters.value)
+  performSearch(1)
+}
+
+// --- Пагинация ---
+const handlePageChange = (newPage) => {
+  store.commit('setPage', newPage)
+  performSearch(newPage)
+}
+
+// --- Синхронизация с URL ---
 const updateUrl = () => {
   const params = new URLSearchParams()
-  
-  if (filters.name) params.set('name', filters.name)
-  if (filters.hasImage) params.set('has_image', '1')
-  if (filters.roomsCount.length) {
-    filters.roomsCount.forEach(count => params.append('rooms_count[]', count))
+  if (filters.value.name) params.set('name', filters.value.name)
+  if (filters.value.hasImage) params.set('has_image', '1')
+  if (filters.value.roomsCount.length) {
+    filters.value.roomsCount.forEach(count => params.append('rooms_count[]', count))
   }
-  if (filters.areaMin) params.set('area_min', filters.areaMin)
-  if (filters.areaMax) params.set('area_max', filters.areaMax)
-  if (filters.sortBy && filters.sortBy !== 'id') params.set('sort_by', filters.sortBy)
-  if (filters.sortDirection && filters.sortDirection !== 'desc') params.set('sort_direction', filters.sortDirection)
-  
+  if (filters.value.areaMin) params.set('area_min', filters.value.areaMin)
+  if (filters.value.areaMax) params.set('area_max', filters.value.areaMax)
+  if (filters.value.sortBy && filters.value.sortBy !== 'id') params.set('sort_by', filters.value.sortBy)
+  if (filters.value.sortDirection && filters.value.sortDirection !== 'desc') params.set('sort_direction', filters.value.sortDirection)
+  params.set('page', page.value)
   const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '')
   window.history.replaceState({}, '', newUrl)
 }
 
-// Clear all filters
-const clearFilters = () => {
-  filters.name = ''
-  filters.hasImage = false
-  filters.roomsCount = []
-  filters.areaMin = null
-  filters.areaMax = null
-  filters.sortBy = 'id'
-  filters.sortDirection = 'desc'
-  
-  performSearch()
+// --- Получение статистики фильтров ---
+const fetchFilterStats = async () => {
+  const response = await fetch('/api/tire-services/stats')
+  if (response.ok) {
+    filterStats.value = await response.json()
+  }
 }
 
-// Handle page change
-const handlePageChange = (page) => {
-  performSearch(page)
-}
-
-// Set sort direction
-const setSortDirection = (direction) => {
-  filters.sortDirection = direction
-  performSearch()
-}
+// --- Инициализация ---
+onMounted(async () => {
+  await fetchFilterStats()
+  await performSearch(page.value)
+})
 
 // Get sorting label for display
 const getSortingLabel = () => {
-  if (filters.name) {
+  if (filters.value.name) {
     return 'Сортировка по релевантности поиска'
   }
   
@@ -363,35 +349,7 @@ const getSortingLabel = () => {
     'created_at': 'По дате добавления'
   }
   
-  const directionLabel = filters.sortDirection === 'asc' ? 'по возрастанию' : 'по убыванию'
-  return `${sortLabels[filters.sortBy]} ${directionLabel}`
+  const directionLabel = filters.value.sortDirection === 'asc' ? 'по возрастанию' : 'по убыванию'
+  return `${sortLabels[filters.value.sortBy]} ${directionLabel}`
 }
-
-// Initialize component
-onMounted(() => {
-  // Parse URL parameters on load
-  const urlParams = new URLSearchParams(window.location.search)
-  
-  // Update filters from URL
-  if (urlParams.get('name')) filters.name = urlParams.get('name')
-  if (urlParams.get('has_image')) filters.hasImage = urlParams.get('has_image') === '1'
-  if (urlParams.get('area_min')) filters.areaMin = parseInt(urlParams.get('area_min'))
-  if (urlParams.get('area_max')) filters.areaMax = parseInt(urlParams.get('area_max'))
-  if (urlParams.get('sort_by')) filters.sortBy = urlParams.get('sort_by')
-  if (urlParams.get('sort_direction')) filters.sortDirection = urlParams.get('sort_direction')
-  
-  // Parse rooms_count array
-  const roomsCountParams = urlParams.getAll('rooms_count[]')
-  if (roomsCountParams.length > 0) {
-    filters.roomsCount = roomsCountParams.map(count => parseInt(count))
-  }
-  
-  console.log('Component mounted with filters:', filters)
-  console.log('Initial data:', data.value)
-  
-  // Load initial data if needed
-  if (!data.value || !data.value.data || data.value.data.length === 0) {
-    performSearch()
-  }
-})
 </script> 
