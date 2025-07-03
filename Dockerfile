@@ -1,4 +1,4 @@
-# Frontend build stage
+﻿# Frontend build stage
 FROM node:18-alpine AS frontend-build
 
 WORKDIR /app
@@ -75,6 +75,12 @@ COPY --from=frontend-build --chown=www:www /app/public/build /var/www/public/bui
 # Копируем остальной код приложения (выполняется при каждом изменении кода)
 COPY --chown=www:www . /var/www
 
+# Копируем изображения в storage для доступа через веб
+RUN mkdir -p /var/www/storage/app/public/tire-services/ \
+    && cp /var/www/database/migrations/images/*.jpeg /var/www/storage/app/public/tire-services/ 2>/dev/null || true \
+    && chown -R www:www /var/www/storage/app/public/tire-services/ \
+    && chmod -R 755 /var/www/storage/app/public/tire-services/
+
 # Завершаем установку composer скриптов после копирования всего кода
 RUN composer run-script post-autoload-dump
 
@@ -88,4 +94,4 @@ USER root
 EXPOSE 80
 
 # Запускаем встроенный Laravel сервер с созданием symbolic link
-CMD ["/bin/sh", "-c", "php artisan storage:link && php artisan serve --host=0.0.0.0 --port=80"] 
+CMD ["/bin/sh", "-c", "php artisan storage:link && php artisan serve --host=0.0.0.0 --port=80"]
