@@ -58,17 +58,17 @@ class TireService extends Model
             return $query;
         }
 
-        return $query->where(function($q) use ($name) {
+        return $query->where(function ($q) use ($name) {
             $q->where('name', 'LIKE', $name)  // Точное совпадение
-                ->orWhere('name', 'LIKE', $name . '%')  // Начинается с запроса
-                ->orWhere('name', 'LIKE', '%' . $name . '%');  // Содержит запрос
+                ->orWhere('name', 'LIKE', "{$name}%")  // Начинается с запроса
+                ->orWhere('name', 'LIKE', "%{$name}%");  // Содержит запрос
         })->orderByRaw("
-            CASE 
+            CASE
                 WHEN name LIKE ? THEN 1
                 WHEN name LIKE ? THEN 2
                 ELSE 3
             END
-        ", [$name, $name . '%']);
+        ", [$name, "{$name}%"]);
     }
 
     /**
@@ -80,9 +80,11 @@ class TireService extends Model
             return $query;
         }
 
-        return $hasImage 
-            ? $query->whereNotNull('image')
-            : $query->whereNull('image');
+        if ($hasImage) {
+            return $query->whereNotNull('image');
+        }
+
+        return $query->whereNull('image');
     }
 
     /**
@@ -121,11 +123,12 @@ class TireService extends Model
         if (!$this->image) {
             return null;
         }
-        
+
         // Кодируем имя файла для корректной работы с пробелами
-        $encodedPath = 'tire-services/' . rawurlencode($this->image);
-        
-        return asset('storage/' . $encodedPath);
+        $encodedImage = rawurlencode($this->image);
+        $encodedPath = "tire-services/{$encodedImage}";
+
+        return asset("storage/{$encodedPath}");
     }
 
     /**

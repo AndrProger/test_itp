@@ -32,7 +32,7 @@ class TireServiceSeeder extends Seeder
         for ($i = 0; $i < $batches; $i++) {
             $currentBatchSize = min($batchSize, $totalRecords - ($i * $batchSize));
 
-            $this->command->info("Генерация батча " . ($i + 1) . " из $batches ($currentBatchSize записей)...");
+            $this->command->info("Генерация батча " . ($i + 1) . " из {$batches} ({$currentBatchSize} записей)...");
 
             // 70% записей с изображениями
             $withImageCount = round($currentBatchSize * 0.7);
@@ -43,6 +43,6 @@ class TireServiceSeeder extends Seeder
             TireService::factory($withoutImageCount)->withoutImage()->create();
         }
 
-        $this->command->info("✅ Успешно сгенерировано $totalRecords записей шиномонтажных сервисов!");
+        $this->command->info("✅ Успешно сгенерировано {$totalRecords} записей шиномонтажных сервисов!");
     }
 }

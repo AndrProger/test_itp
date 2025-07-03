@@ -23,20 +23,20 @@ class TireServiceFactory extends Factory
      * Доступные фотографии шиномонтажных сервисов
      */
     protected array $availableImages = [
-        'tire-services/XXL_height.jpeg',
-        'tire-services/XXL_height (1).jpeg',
-        'tire-services/XXL_height (2).jpeg',
-        'tire-services/XXL_height (3).jpeg',
-        'tire-services/XXL_height (4).jpeg',
-        'tire-services/XXL_height (5).jpeg',
-        'tire-services/XXL_height (6).jpeg',
-        'tire-services/XXL_height (7).jpeg',
-        'tire-services/XXL_height (8).jpeg',
-        'tire-services/XXL_height (9).jpeg',
-        'tire-services/orig.jpeg',
-        'tire-services/orig (1).jpeg',
-        'tire-services/XXXL.jpeg',
-        'tire-services/XXXL (1).jpeg',
+        'orig.jpeg',
+        'orig (1).jpeg',
+        'XXL_height.jpeg',
+        'XXL_height (1).jpeg',
+        'XXL_height (2).jpeg',
+        'XXL_height (3).jpeg',
+        'XXL_height (4).jpeg',
+        'XXL_height (5).jpeg',
+        'XXL_height (6).jpeg',
+        'XXL_height (7).jpeg',
+        'XXL_height (8).jpeg',
+        'XXL_height (9).jpeg',
+        'XXXL.jpeg',
+        'XXXL (1).jpeg',
     ];
 
     /**
@@ -46,22 +46,6 @@ class TireServiceFactory extends Factory
      */
     public function definition(): array
     {
-        $images = [
-            'orig.jpeg',
-            'orig (1).jpeg',
-            'XXL_height.jpeg',
-            'XXL_height (1).jpeg',
-            'XXL_height (2).jpeg',
-            'XXL_height (3).jpeg',
-            'XXL_height (4).jpeg',
-            'XXL_height (5).jpeg',
-            'XXL_height (6).jpeg',
-            'XXL_height (7).jpeg',
-            'XXL_height (8).jpeg',
-            'XXL_height (9).jpeg',
-            'XXXL.jpeg',
-            'XXXL (1).jpeg',
-        ];
 
         $serviceNames = [
             'Автосервис Премиум',
@@ -103,10 +87,10 @@ class TireServiceFactory extends Factory
         $createdAt = $this->faker->dateTimeBetween('-6 months', 'now');
         // updated_at должен быть не раньше created_at и не позже текущей даты
         $updatedAt = $this->faker->dateTimeBetween($createdAt, 'now');
-        
+
         return [
             'name' => $this->faker->randomElement($serviceNames) . ' ' . $this->faker->numberBetween(1, 99),
-            'image' => $this->faker->boolean(70) ? $this->faker->randomElement($images) : null,
+            'image' => $this->faker->boolean(70) ? $this->faker->randomElement($this->availableImages) : null,
             'rooms_count' => $this->faker->numberBetween(1, 8),
             'floor' => $this->faker->numberBetween(1, 15),
             'area' => $this->faker->numberBetween(20, 500),
@@ -121,25 +105,8 @@ class TireServiceFactory extends Factory
      */
     public function withImage(): static
     {
-        $images = [
-            'orig.jpeg',
-            'orig (1).jpeg',
-            'XXL_height.jpeg',
-            'XXL_height (1).jpeg',
-            'XXL_height (2).jpeg',
-            'XXL_height (3).jpeg',
-            'XXL_height (4).jpeg',
-            'XXL_height (5).jpeg',
-            'XXL_height (6).jpeg',
-            'XXL_height (7).jpeg',
-            'XXL_height (8).jpeg',
-            'XXL_height (9).jpeg',
-            'XXXL.jpeg',
-            'XXXL (1).jpeg',
-        ];
-
         return $this->state(fn (array $attributes) => [
-            'image' => $this->faker->randomElement($images),
+            'image' => $this->faker->randomElement($this->availableImages),
         ]);
     }
 
@@ -182,7 +149,7 @@ class TireServiceFactory extends Factory
     {
         $services = [
             'Шиномонтаж' => [
-                'Замена и ремонт шин', 'Балансировка колес', 
+                'Замена и ремонт шин', 'Балансировка колес',
                 'Шиномонтажные работы', 'Хранение шин'
             ],
             'СТО' => [
@@ -203,10 +170,11 @@ class TireServiceFactory extends Factory
         $maxCount = min(count($serviceList), 4);
         $selectedServices = $this->faker->randomElements($serviceList, $this->faker->numberBetween(2, $maxCount));
 
+        $openHour = $this->faker->numberBetween(8, 10);
+        $closeHour = $this->faker->numberBetween(18, 22);
         $description = "Предлагаем следующие услуги: " . implode(', ', $selectedServices) . ". ";
         $description .= "Опытные мастера, качественное оборудование, гарантия на все виды работ. ";
-        $description .= "Работаем ежедневно с " . $this->faker->numberBetween(8, 10) . ":00 до " . 
-                       $this->faker->numberBetween(18, 22) . ":00.";
+        $description .= "Работаем ежедневно с {$openHour}:00 до {$closeHour}:00.";
 
         return $description;
     }
