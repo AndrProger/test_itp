@@ -78,7 +78,7 @@
           </label>
           <div class="flex flex-wrap gap-2">
             <label
-              v-for="roomCount in filterStats.rooms_counts"
+              v-for="roomCount in 8"
               :key="roomCount"
               class="flex items-center"
             >
