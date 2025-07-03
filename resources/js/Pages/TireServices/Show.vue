@@ -187,16 +187,71 @@ const goBack = () => {
 // Share service
 const shareService = () => {
   if (navigator.share) {
+    // Native share API (на мобильных устройствах)
     navigator.share({
       title: props.tireService.name,
       text: `Проверьте этот шиномонтажный сервис: ${props.tireService.name}`,
       url: window.location.href
+    }).catch(err => {
+      console.log('Error sharing:', err)
+      fallbackCopyToClipboard()
     })
   } else {
-    // Fallback: copy to clipboard
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      alert('Ссылка скопирована в буфер обмена!')
-    })
+    // Fallback для десктопа
+    fallbackCopyToClipboard()
   }
+}
+
+// Fallback функция копирования в буфер обмена
+const fallbackCopyToClipboard = () => {
+  const url = window.location.href
+  
+  // Проверяем доступность современного Clipboard API
+  if (navigator.clipboard && window.isSecureContext) {
+    navigator.clipboard.writeText(url).then(() => {
+      alert('Ссылка скопирована в буфер обмена!')
+    }).catch(err => {
+      console.error('Failed to copy with Clipboard API:', err)
+      legacyCopyToClipboard(url)
+    })
+  } else {
+    // Используем устаревший метод для HTTP сайтов
+    legacyCopyToClipboard(url)
+  }
+}
+
+// Устаревший метод копирования для небезопасных контекстов
+const legacyCopyToClipboard = (text) => {
+  try {
+    // Создаем временное текстовое поле
+    const textArea = document.createElement('textarea')
+    textArea.value = text
+    textArea.style.position = 'fixed'
+    textArea.style.left = '-999999px'
+    textArea.style.top = '-999999px'
+    document.body.appendChild(textArea)
+    
+    // Выделяем текст и копируем
+    textArea.focus()
+    textArea.select()
+    
+    const successful = document.execCommand('copy')
+    document.body.removeChild(textArea)
+    
+    if (successful) {
+      alert('Ссылка скопирована в буфер обмена!')
+    } else {
+      showManualCopyDialog(text)
+    }
+  } catch (err) {
+    console.error('Legacy copy failed:', err)
+    showManualCopyDialog(text)
+  }
+}
+
+// Показать диалог для ручного копирования
+const showManualCopyDialog = (text) => {
+  const message = `Не удалось скопировать автоматически. Скопируйте ссылку вручную:\n\n${text}`
+  alert(message)
 }
 </script> 
